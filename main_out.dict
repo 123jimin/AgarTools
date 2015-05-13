@@ -131,7 +131,7 @@ cursorY
 ?
 ?
 zoomFactor
-?
+currentRegion
 showSkins
 showNames
 noColor
@@ -142,7 +142,7 @@ showMass
 newViewCenter_x
 newViewCenter_y
 newZoomFactor
-?
+gameMode
 ?
 ?
 isMobile
@@ -177,7 +177,7 @@ pointsLen
 i
 ?
 ?
-?
+self
 ?
 ?
 ?

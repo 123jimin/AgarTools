@@ -107,13 +107,13 @@
         $("#overlays").hide();
     }
     function joinRegion(region) {
-        if (region && region != unk_134) {
-            unk_134 = region;
+        if (region && region != currentRegion) {
+            currentRegion = region;
             beginConnectServer();
         }
     }
     function tryConnectServer() {
-        console.log("Find " + unk_134 + unk_145);
+        console.log("Find " + currentRegion + gameMode);
         $.ajax("http://m.agar.io/", {
             error: function() {
                 setTimeout(tryConnectServer, 1e3);
@@ -126,11 +126,11 @@
             method: "POST",
             cache: false,
             crossDomain: true,
-            data: unk_134 + unk_145 || "?"
+            data: currentRegion + gameMode || "?"
         });
     }
     function beginConnectServer() {
-        if (unk_134) {
+        if (currentRegion) {
             $("#connecting").show();
             tryConnectServer();
         }
@@ -516,7 +516,7 @@
         if (strokeColor) this._strokeColor = strokeColor;
     }
     if ("agar.io" != window.location.hostname && "localhost" != window.location.hostname && "10.10.2.13" != window.location.hostname) window.location = "http://agar.io/"; else if (window.top != window) window.top.location = "http://agar.io/"; else {
-        var mainCanvDup, mainCtx, mainCanv, winWidth, winHeight, quadTree = null, ws = null, viewCenterX = 0, viewCenterY = 0, unk_116 = [], myBlobs = [], cellDict = {}, cellList = [], unk_120 = [], leaderboards = [], cursorPX = 0, cursorPY = 0, cursorX = -1, cursorY = -1, unk_126 = 0, unk_127 = 0, unk_128 = null, unk_129 = 0, unk_130 = 0, unk_131 = 1e4, unk_132 = 1e4, zoomFactor = 1, unk_134 = null, showSkins = true, showNames = true, noColor = false, unk_138 = false, unk_139 = 0, darkTheme = false, showMass = false, newViewCenter_x = viewCenterX = 0 | (unk_129 + unk_131) / 2, newViewCenter_y = viewCenterY = 0 | (unk_130 + unk_132) / 2, newZoomFactor = 1, unk_145 = "", unk_146 = null, unk_147 = [ "#333333", "#FF3333", "#33FF33", "#3333FF" ], isMobile = "ontouchstart" in window && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent), unk_149 = new Image();
+        var mainCanvDup, mainCtx, mainCanv, winWidth, winHeight, quadTree = null, ws = null, viewCenterX = 0, viewCenterY = 0, unk_116 = [], myBlobs = [], cellDict = {}, cellList = [], unk_120 = [], leaderboards = [], cursorPX = 0, cursorPY = 0, cursorX = -1, cursorY = -1, unk_126 = 0, unk_127 = 0, unk_128 = null, unk_129 = 0, unk_130 = 0, unk_131 = 1e4, unk_132 = 1e4, zoomFactor = 1, currentRegion = null, showSkins = true, showNames = true, noColor = false, unk_138 = false, unk_139 = 0, darkTheme = false, showMass = false, newViewCenter_x = viewCenterX = 0 | (unk_129 + unk_131) / 2, newViewCenter_y = viewCenterY = 0 | (unk_130 + unk_132) / 2, newZoomFactor = 1, gameMode = "", unk_146 = null, unk_147 = [ "#333333", "#FF3333", "#33FF33", "#3333FF" ], isMobile = "ontouchstart" in window && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent), unk_149 = new Image();
         unk_149.src = "img/split.png";
         var unk_150 = null;
         window.setNick = function(_nick) {
@@ -546,8 +546,8 @@
             hideOverlay();
         };
         window.setGameMode = function(_gameMode) {
-            if (_gameMode != unk_145) {
-                unk_145 = _gameMode;
+            if (_gameMode != gameMode) {
+                gameMode = _gameMode;
                 beginConnectServer();
             }
         };
@@ -642,14 +642,14 @@
                     if (-10 > orig_pointsAcc[i]) orig_pointsAcc[i] = -10;
                     orig_pointsAcc[i] = (unk_178 + unk_179 + 8 * orig_pointsAcc[i]) / 10;
                 }
-                for (var unk_180 = this, i = 0; i < pointsLen; ++i) {
+                for (var self = this, i = 0; i < pointsLen; ++i) {
                     pointsAcc = new_points[i].v;
                     unk_178 = new_points[(i - 1 + pointsLen) % pointsLen].v;
                     unk_179 = new_points[(i + 1) % pointsLen].v;
                     if (15 < this.size && null != quadTree) {
                         var unk_181 = false, unk_182 = points[i].x, unk_183 = points[i].y;
                         quadTree.retrieve2(unk_182 - 5, unk_183 - 5, 10, 10, function(unk_184) {
-                            if (unk_184.c != unk_180 && 25 > (unk_182 - unk_184.x) * (unk_182 - unk_184.x) + (unk_183 - unk_184.y) * (unk_183 - unk_184.y)) unk_181 = true;
+                            if (unk_184.c != self && 25 > (unk_182 - unk_184.x) * (unk_182 - unk_184.x) + (unk_183 - unk_184.y) * (unk_183 - unk_184.y)) unk_181 = true;
                         });
                         if (!unk_181 && (points[i].x < unk_129 || points[i].y < unk_130 || points[i].x > unk_131 || points[i].y > unk_132)) unk_181 = true;
                         if (unk_181) {
@@ -718,7 +718,7 @@
                     }
                     mainCtx.closePath();
                     misc2 = this.name.toLowerCase();
-                    if (showSkins && "" == unk_145) if (-1 != skinList.indexOf(misc2)) {
+                    if (showSkins && "" == gameMode) if (-1 != skinList.indexOf(misc2)) {
                         if (!skinImages.hasOwnProperty(misc2)) {
                             skinImages[misc2] = new Image();
                             skinImages[misc2].src = "skins/" + misc2 + ".png";
