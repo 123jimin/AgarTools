@@ -1,0 +1,13 @@
+{
+	"name": "agartools",
+	"description": "Yet another reverse-engineering project of agar.io",
+	"readme": "README.md",
+	"private": true,
+	"dependencies": {
+	},
+	"devDependencies": {
+		"uglify-js": "^2.4.21"
+	},
+	"scripts": {
+	}
+}
