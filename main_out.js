@@ -222,7 +222,7 @@
                     name: readStr()
                 });
             }
-            unk_90();
+            redrawLeaderboard();
             break;
 
           case 50:
@@ -233,7 +233,7 @@
                 unk_146.push(view.getFloat32(pos, true));
                 pos += 4;
             }
-            unk_90();
+            redrawLeaderboard();
             break;
 
           case 64:
@@ -458,7 +458,7 @@
         for (var unk_88 = 0, unk_89 = 0; unk_89 < myBlobs.length; unk_89++) unk_88 += myBlobs[unk_89].nSize * myBlobs[unk_89].nSize;
         return unk_88;
     }
-    function unk_90() {
+    function redrawLeaderboard() {
         lBoardCanv = null;
         if (null != unk_146 || 0 != leaderboards.length) if (null != unk_146 || showNames) {
             lBoardCanv = document.createElement("canvas");
@@ -669,30 +669,30 @@
                 }
             },
             updatePos: function() {
-                var unk_185;
-                unk_185 = (unk_127 - this.updateTime) / 120;
-                unk_185 = 0 > unk_185 ? 0 : 1 < unk_185 ? 1 : unk_185;
-                unk_185 = unk_185 * unk_185 * (3 - 2 * unk_185);
+                var updateRate;
+                updateRate = (unk_127 - this.updateTime) / 120;
+                updateRate = 0 > updateRate ? 0 : 1 < updateRate ? 1 : updateRate;
+                updateRate = updateRate * updateRate * (3 - 2 * updateRate);
                 this.getNameSize();
-                if (this.destroyed && 1 <= unk_185) {
+                if (this.destroyed && 1 <= updateRate) {
                     var unk_186 = unk_120.indexOf(this);
                     if (-1 != unk_186) unk_120.splice(unk_186, 1);
                 }
-                this.x = unk_185 * (this.nx - this.ox) + this.ox;
-                this.y = unk_185 * (this.ny - this.oy) + this.oy;
-                this.size = unk_185 * (this.nSize - this.oSize) + this.oSize;
-                return unk_185;
+                this.x = updateRate * (this.nx - this.ox) + this.ox;
+                this.y = updateRate * (this.ny - this.oy) + this.oy;
+                this.size = updateRate * (this.nSize - this.oSize) + this.oSize;
+                return updateRate;
             },
             shouldRender: function() {
                 return this.x + this.size + 40 < viewCenter_x - winWidth / 2 / zoomFactor || this.y + this.size + 40 < viewCenter_y - winHeight / 2 / zoomFactor || this.x - this.size - 40 > viewCenter_x + winWidth / 2 / zoomFactor || this.y - this.size - 40 > viewCenter_y + winHeight / 2 / zoomFactor ? false : true;
             },
             draw: function() {
                 if (this.shouldRender()) {
-                    var unk_187 = !this.isVirus && .5 > zoomFactor;
+                    var misc1 = !this.isVirus && .5 > zoomFactor;
                     mainCtx.save();
                     this.drawTime = unk_127;
-                    var misc1 = this.updatePos();
-                    if (this.destroyed) mainCtx.globalAlpha *= 1 - misc1;
+                    var misc2 = this.updatePos();
+                    if (this.destroyed) mainCtx.globalAlpha *= 1 - misc2;
                     mainCtx.lineWidth = 10;
                     mainCtx.lineCap = "round";
                     mainCtx.lineJoin = this.isVirus ? "mitter" : "round";
@@ -703,67 +703,67 @@
                         mainCtx.fillStyle = this.color;
                         mainCtx.strokeStyle = this.color;
                     }
-                    if (unk_187) {
+                    if (misc1) {
                         mainCtx.beginPath();
                         mainCtx.arc(this.x, this.y, this.size, 0, 2 * Math.PI, false);
                     } else {
                         this.movePoints();
                         mainCtx.beginPath();
-                        misc1 = this.getNumPoints();
+                        misc2 = this.getNumPoints();
                         mainCtx.moveTo(this.points[0].x, this.points[0].y);
-                        for (var misc2 = 1; misc2 <= misc1; ++misc2) {
-                            var misc3 = misc2 % misc1;
-                            mainCtx.lineTo(this.points[misc3].x, this.points[misc3].y);
+                        for (var misc3 = 1; misc3 <= misc2; ++misc3) {
+                            var misc4 = misc3 % misc2;
+                            mainCtx.lineTo(this.points[misc4].x, this.points[misc4].y);
                         }
                     }
                     mainCtx.closePath();
-                    misc1 = this.name.toLowerCase();
-                    if (showSkins && "" == unk_145) if (-1 != skinList.indexOf(misc1)) {
-                        if (!skinImages.hasOwnProperty(misc1)) {
-                            skinImages[misc1] = new Image();
-                            skinImages[misc1].src = "skins/" + misc1 + ".png";
+                    misc2 = this.name.toLowerCase();
+                    if (showSkins && "" == unk_145) if (-1 != skinList.indexOf(misc2)) {
+                        if (!skinImages.hasOwnProperty(misc2)) {
+                            skinImages[misc2] = new Image();
+                            skinImages[misc2].src = "skins/" + misc2 + ".png";
                         }
-                        misc2 = skinImages[misc1];
-                    } else misc2 = null; else misc2 = null;
-                    misc1 = misc2 ? -1 != unk_165.indexOf(misc1) : false;
-                    if (!unk_187) mainCtx.stroke();
+                        misc3 = skinImages[misc2];
+                    } else misc3 = null; else misc3 = null;
+                    misc2 = misc3 ? -1 != unk_165.indexOf(misc2) : false;
+                    if (!misc1) mainCtx.stroke();
                     mainCtx.fill();
-                    if (null != misc2 && 0 < misc2.width && !misc1) {
+                    if (null != misc3 && 0 < misc3.width && !misc2) {
                         mainCtx.save();
                         mainCtx.clip();
-                        mainCtx.drawImage(misc2, this.x - this.size, this.y - this.size, 2 * this.size, 2 * this.size);
+                        mainCtx.drawImage(misc3, this.x - this.size, this.y - this.size, 2 * this.size, 2 * this.size);
                         mainCtx.restore();
                     }
-                    if ((noColor || 15 < this.size) && !unk_187) {
+                    if ((noColor || 15 < this.size) && !misc1) {
                         mainCtx.strokeStyle = "#000000";
                         mainCtx.globalAlpha *= .1;
                         mainCtx.stroke();
                     }
                     mainCtx.globalAlpha = 1;
-                    if (null != misc2 && 0 < misc2.width && misc1) mainCtx.drawImage(misc2, this.x - 2 * this.size, this.y - 2 * this.size, 4 * this.size, 4 * this.size);
-                    misc2 = -1 != myBlobs.indexOf(this);
-                    unk_187 = 0 | this.y;
-                    if ((showNames || misc2) && this.name && this.nameCache) {
-                        misc3 = this.nameCache;
-                        misc3.setValue(this.name);
-                        misc3.setSize(this.getNameSize());
-                        misc1 = Math.ceil(10 * zoomFactor) / 10;
-                        misc3.setScale(misc1);
-                        var misc3 = misc3.render(), unk_191 = 0 | misc3.width / misc1, unk_192 = 0 | misc3.height / misc1;
-                        mainCtx.drawImage(misc3, (0 | this.x) - (0 | unk_191 / 2), unk_187 - (0 | unk_192 / 2), unk_191, unk_192);
-                        unk_187 += misc3.height / 2 / misc1 + 4;
+                    if (null != misc3 && 0 < misc3.width && misc2) mainCtx.drawImage(misc3, this.x - 2 * this.size, this.y - 2 * this.size, 4 * this.size, 4 * this.size);
+                    misc3 = -1 != myBlobs.indexOf(this);
+                    misc1 = 0 | this.y;
+                    if ((showNames || misc3) && this.name && this.nameCache) {
+                        misc4 = this.nameCache;
+                        misc4.setValue(this.name);
+                        misc4.setSize(this.getNameSize());
+                        misc2 = Math.ceil(10 * zoomFactor) / 10;
+                        misc4.setScale(misc2);
+                        var misc4 = misc4.render(), textWidth = 0 | misc4.width / misc2, textHeight = 0 | misc4.height / misc2;
+                        mainCtx.drawImage(misc4, (0 | this.x) - (0 | textWidth / 2), misc1 - (0 | textHeight / 2), textWidth, textHeight);
+                        misc1 += misc4.height / 2 / misc2 + 4;
                     }
-                    if (showMass && misc2) {
+                    if (showMass && misc3) {
                         if (null == this.sizeCache) this.sizeCache = new TextDisplayer(this.getNameSize() / 2, "#FFFFFF", true, "#000000");
-                        misc2 = this.sizeCache;
-                        misc2.setSize(this.getNameSize() / 2);
-                        misc2.setValue(0 | this.size * this.size / 100);
-                        misc1 = Math.ceil(10 * zoomFactor) / 10;
-                        misc2.setScale(misc1);
-                        misc3 = misc2.render();
-                        unk_191 = 0 | misc3.width / misc1;
-                        unk_192 = 0 | misc3.height / misc1;
-                        mainCtx.drawImage(misc3, (0 | this.x) - (0 | unk_191 / 2), unk_187 - (0 | unk_192 / 2), unk_191, unk_192);
+                        misc3 = this.sizeCache;
+                        misc3.setSize(this.getNameSize() / 2);
+                        misc3.setValue(0 | this.size * this.size / 100);
+                        misc2 = Math.ceil(10 * zoomFactor) / 10;
+                        misc3.setScale(misc2);
+                        misc4 = misc3.render();
+                        textWidth = 0 | misc4.width / misc2;
+                        textHeight = 0 | misc4.height / misc2;
+                        mainCtx.drawImage(misc4, (0 | this.x) - (0 | textWidth / 2), misc1 - (0 | textHeight / 2), textWidth, textHeight);
                     }
                     mainCtx.restore();
                 }

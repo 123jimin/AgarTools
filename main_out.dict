@@ -87,7 +87,7 @@ redraw
 ?
 ?
 ?
-?
+redrawLeaderboard
 lBoardCtx
 ?
 str
@@ -182,14 +182,14 @@ i
 ?
 ?
 ?
-?
-?
+updateRate
 ?
 misc1
 misc2
 misc3
-?
-?
+misc4
+textWidth
+textHeight
 _size
 _scale
 _color
