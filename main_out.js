@@ -13,15 +13,15 @@
                     return;
                 }
             }
-            targetX = evt.clientX;
-            targetY = evt.clientY;
-            unk_21();
+            cursorPX = evt.clientX;
+            cursorPY = evt.clientY;
+            updateCursorCoord();
             wsSendCursor();
         };
         mainCanv.onmousemove = function(evt) {
-            targetX = evt.clientX;
-            targetY = evt.clientY;
-            unk_21();
+            cursorPX = evt.clientX;
+            cursorPY = evt.clientY;
+            updateCursorCoord();
         };
         mainCanv.onmouseup = function(evt) {};
         var keyflag_space = false, keyflag_Q = false, keyflag_W = false;
@@ -63,12 +63,12 @@
     }
     function unk_14() {
         if (.5 > zoomFactor) quadTree = null; else {
-            for (var minX = Number.POSITIVE_INFINITY, minY = Number.POSITIVE_INFINITY, maxX = Number.NEGATIVE_INFINITY, maxY = Number.NEGATIVE_INFINITY, unk_19 = 0, unk_20 = 0; unk_20 < unk_119.length; unk_20++) if (unk_119[unk_20].shouldRender()) {
-                unk_19 = Math.max(unk_119[unk_20].size, unk_19);
-                minX = Math.min(unk_119[unk_20].x, minX);
-                minY = Math.min(unk_119[unk_20].y, minY);
-                maxX = Math.max(unk_119[unk_20].x, maxX);
-                maxY = Math.max(unk_119[unk_20].y, maxY);
+            for (var minX = Number.POSITIVE_INFINITY, minY = Number.POSITIVE_INFINITY, maxX = Number.NEGATIVE_INFINITY, maxY = Number.NEGATIVE_INFINITY, unk_19 = 0, unk_20 = 0; unk_20 < cellList.length; unk_20++) if (cellList[unk_20].shouldRender()) {
+                unk_19 = Math.max(cellList[unk_20].size, unk_19);
+                minX = Math.min(cellList[unk_20].x, minX);
+                minY = Math.min(cellList[unk_20].y, minY);
+                maxX = Math.max(cellList[unk_20].x, maxX);
+                maxY = Math.max(cellList[unk_20].y, maxY);
             }
             quadTree = QUAD.init({
                 minX: minX - (unk_19 + 100),
@@ -76,13 +76,13 @@
                 maxX: maxX + (unk_19 + 100),
                 maxY: maxY + (unk_19 + 100)
             });
-            for (unk_20 = 0; unk_20 < unk_119.length; unk_20++) if (minX = unk_119[unk_20], 
+            for (unk_20 = 0; unk_20 < cellList.length; unk_20++) if (minX = cellList[unk_20], 
             minX.shouldRender()) for (minY = 0; minY < minX.points.length; ++minY) quadTree.insert(minX.points[minY]);
         }
     }
-    function unk_21() {
-        unk_124 = (targetX - winWidth / 2) / zoomFactor + viewCenter_x;
-        unk_125 = (targetY - winHeight / 2) / zoomFactor + viewCenter_y;
+    function updateCursorCoord() {
+        cursorX = (cursorPX - winWidth / 2) / zoomFactor + viewCenterX;
+        cursorY = (cursorPY - winHeight / 2) / zoomFactor + viewCenterY;
     }
     function getServerInfo() {
         if (null == unk_150) {
@@ -146,7 +146,7 @@
         unk_116 = [];
         myBlobs = [];
         cellDict = {};
-        unk_119 = [];
+        cellList = [];
         unk_120 = [];
         leaderboards = [];
         lBoardCanv = unk_146 = null;
@@ -246,8 +246,8 @@
                 newViewCenter_y = (unk_132 + unk_130) / 2;
                 newZoomFactor = 1;
                 if (0 == myBlobs.length) {
-                    viewCenter_x = newViewCenter_x;
-                    viewCenter_y = newViewCenter_y;
+                    viewCenterX = newViewCenter_x;
+                    viewCenterY = newViewCenter_y;
                     zoomFactor = newZoomFactor;
                 }
             }
@@ -308,8 +308,8 @@
                 document.getElementById("overlays").style.display = "none";
                 myBlobs.push(unk_62);
                 if (1 == myBlobs.length) {
-                    viewCenter_x = unk_62.x;
-                    viewCenter_y = unk_62.y;
+                    viewCenterX = unk_62.x;
+                    viewCenterY = unk_62.y;
                 }
             }
         }
@@ -322,20 +322,20 @@
             pos += 4;
             if (cellDict[unk_55]) cellDict[unk_55].updateCode = updateCode;
         }
-        for (unk_56 = 0; unk_56 < unk_119.length; unk_56++) if (unk_119[unk_56].updateCode != updateCode) unk_119[unk_56--].destroy();
+        for (unk_56 = 0; unk_56 < cellList.length; unk_56++) if (cellList[unk_56].updateCode != updateCode) cellList[unk_56--].destroy();
         if (unk_138 && 0 == myBlobs.length) $("#overlays").fadeIn(3e3);
     }
     function wsSendCursor() {
         if (null != ws && ws.readyState == ws.OPEN) {
-            var dx = targetX - winWidth / 2, dy = targetY - winHeight / 2;
-            if (!(64 > dx * dx + dy * dy || unk_158 == unk_124 && unk_159 == unk_125)) {
-                unk_158 = unk_124;
-                unk_159 = unk_125;
+            var dx = cursorPX - winWidth / 2, dy = cursorPY - winHeight / 2;
+            if (!(64 > dx * dx + dy * dy || unk_158 == cursorX && unk_159 == cursorY)) {
+                unk_158 = cursorX;
+                unk_159 = cursorY;
                 dx = new ArrayBuffer(21);
                 dy = new DataView(dx);
                 dy.setUint8(0, 16);
-                dy.setFloat64(1, unk_124, true);
-                dy.setFloat64(9, unk_125, true);
+                dy.setFloat64(1, cursorX, true);
+                dy.setFloat64(9, cursorY, true);
                 dy.setUint32(17, 0, true);
                 ws.send(dx);
             }
@@ -388,15 +388,15 @@
             newViewCenter_x = unk_80;
             newViewCenter_y = unk_81;
             newZoomFactor = zoomFactor;
-            viewCenter_x = (viewCenter_x + unk_80) / 2;
-            viewCenter_y = (viewCenter_y + unk_81) / 2;
+            viewCenterX = (viewCenterX + unk_80) / 2;
+            viewCenterY = (viewCenterY + unk_81) / 2;
         } else {
-            viewCenter_x = (29 * viewCenter_x + newViewCenter_x) / 30;
-            viewCenter_y = (29 * viewCenter_y + newViewCenter_y) / 30;
+            viewCenterX = (29 * viewCenterX + newViewCenter_x) / 30;
+            viewCenterY = (29 * viewCenterY + newViewCenter_y) / 30;
             zoomFactor = (9 * zoomFactor + newZoomFactor) / 10;
         }
         unk_14();
-        unk_21();
+        updateCursorCoord();
         mainCtx.clearRect(0, 0, winWidth, winHeight);
         mainCtx.fillStyle = darkTheme ? "#111111" : "#F2FBFF";
         mainCtx.fillRect(0, 0, winWidth, winHeight);
@@ -406,28 +406,28 @@
         mainCtx.scale(zoomFactor, zoomFactor);
         unk_80 = winWidth / zoomFactor;
         unk_81 = winHeight / zoomFactor;
-        for (unk_82 = -.5 + (-viewCenter_x + unk_80 / 2) % 50; unk_82 < unk_80; unk_82 += 50) {
+        for (unk_82 = -.5 + (-viewCenterX + unk_80 / 2) % 50; unk_82 < unk_80; unk_82 += 50) {
             mainCtx.beginPath();
             mainCtx.moveTo(unk_82, 0);
             mainCtx.lineTo(unk_82, unk_81);
             mainCtx.stroke();
         }
-        for (unk_82 = -.5 + (-viewCenter_y + unk_81 / 2) % 50; unk_82 < unk_81; unk_82 += 50) {
+        for (unk_82 = -.5 + (-viewCenterY + unk_81 / 2) % 50; unk_82 < unk_81; unk_82 += 50) {
             mainCtx.beginPath();
             mainCtx.moveTo(0, unk_82);
             mainCtx.lineTo(unk_80, unk_82);
             mainCtx.stroke();
         }
         mainCtx.restore();
-        unk_119.sort(function(unk_83, unk_84) {
+        cellList.sort(function(unk_83, unk_84) {
             return unk_83.size == unk_84.size ? unk_83.id - unk_84.id : unk_83.size - unk_84.size;
         });
         mainCtx.save();
         mainCtx.translate(winWidth / 2, winHeight / 2);
         mainCtx.scale(zoomFactor, zoomFactor);
-        mainCtx.translate(-viewCenter_x, -viewCenter_y);
+        mainCtx.translate(-viewCenterX, -viewCenterY);
         for (unk_82 = 0; unk_82 < unk_120.length; unk_82++) unk_120[unk_82].draw();
-        for (unk_82 = 0; unk_82 < unk_119.length; unk_82++) unk_119[unk_82].draw();
+        for (unk_82 = 0; unk_82 < cellList.length; unk_82++) cellList[unk_82].draw();
         mainCtx.restore();
         if (lBoardCanv) mainCtx.drawImage(lBoardCanv, winWidth - lBoardCanv.width - 10, 10);
         unk_139 = Math.max(unk_139, unk_87());
@@ -496,7 +496,7 @@
         }
     }
     function Cell(id, x, y, size, color, isVirus, name) {
-        unk_119.push(this);
+        cellList.push(this);
         cellDict[id] = this;
         this.id = id;
         this.ox = this.x = x;
@@ -516,7 +516,7 @@
         if (strokeColor) this._strokeColor = strokeColor;
     }
     if ("agar.io" != window.location.hostname && "localhost" != window.location.hostname && "10.10.2.13" != window.location.hostname) window.location = "http://agar.io/"; else if (window.top != window) window.top.location = "http://agar.io/"; else {
-        var mainCanvDup, mainCtx, mainCanv, winWidth, winHeight, quadTree = null, ws = null, viewCenter_x = 0, viewCenter_y = 0, unk_116 = [], myBlobs = [], cellDict = {}, unk_119 = [], unk_120 = [], leaderboards = [], targetX = 0, targetY = 0, unk_124 = -1, unk_125 = -1, unk_126 = 0, unk_127 = 0, unk_128 = null, unk_129 = 0, unk_130 = 0, unk_131 = 1e4, unk_132 = 1e4, zoomFactor = 1, unk_134 = null, showSkins = true, showNames = true, noColor = false, unk_138 = false, unk_139 = 0, darkTheme = false, showMass = false, newViewCenter_x = viewCenter_x = 0 | (unk_129 + unk_131) / 2, newViewCenter_y = viewCenter_y = 0 | (unk_130 + unk_132) / 2, newZoomFactor = 1, unk_145 = "", unk_146 = null, unk_147 = [ "#333333", "#FF3333", "#33FF33", "#3333FF" ], isMobile = "ontouchstart" in window && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent), unk_149 = new Image();
+        var mainCanvDup, mainCtx, mainCanv, winWidth, winHeight, quadTree = null, ws = null, viewCenterX = 0, viewCenterY = 0, unk_116 = [], myBlobs = [], cellDict = {}, cellList = [], unk_120 = [], leaderboards = [], cursorPX = 0, cursorPY = 0, cursorX = -1, cursorY = -1, unk_126 = 0, unk_127 = 0, unk_128 = null, unk_129 = 0, unk_130 = 0, unk_131 = 1e4, unk_132 = 1e4, zoomFactor = 1, unk_134 = null, showSkins = true, showNames = true, noColor = false, unk_138 = false, unk_139 = 0, darkTheme = false, showMass = false, newViewCenter_x = viewCenterX = 0 | (unk_129 + unk_131) / 2, newViewCenter_y = viewCenterY = 0 | (unk_130 + unk_132) / 2, newZoomFactor = 1, unk_145 = "", unk_146 = null, unk_147 = [ "#333333", "#FF3333", "#33FF33", "#3333FF" ], isMobile = "ontouchstart" in window && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent), unk_149 = new Image();
         unk_149.src = "img/split.png";
         var unk_150 = null;
         window.setNick = function(_nick) {
@@ -575,19 +575,19 @@
             destroyed: false,
             isVirus: false,
             destroy: function() {
-                var unk_166;
-                for (unk_166 = 0; unk_166 < unk_119.length; unk_166++) if (unk_119[unk_166] == this) {
-                    unk_119.splice(unk_166, 1);
+                var ind;
+                for (ind = 0; ind < cellList.length; ind++) if (cellList[ind] == this) {
+                    cellList.splice(ind, 1);
                     break;
                 }
                 delete cellDict[this.id];
-                unk_166 = myBlobs.indexOf(this);
-                if (-1 != unk_166) {
+                ind = myBlobs.indexOf(this);
+                if (-1 != ind) {
                     unk_138 = true;
-                    myBlobs.splice(unk_166, 1);
+                    myBlobs.splice(ind, 1);
                 }
-                unk_166 = unk_116.indexOf(this.id);
-                if (-1 != unk_166) unk_116.splice(unk_166, 1);
+                ind = unk_116.indexOf(this.id);
+                if (-1 != ind) unk_116.splice(ind, 1);
                 this.destroyed = true;
                 unk_120.push(this);
             },
@@ -684,7 +684,7 @@
                 return updateRate;
             },
             shouldRender: function() {
-                return this.x + this.size + 40 < viewCenter_x - winWidth / 2 / zoomFactor || this.y + this.size + 40 < viewCenter_y - winHeight / 2 / zoomFactor || this.x - this.size - 40 > viewCenter_x + winWidth / 2 / zoomFactor || this.y - this.size - 40 > viewCenter_y + winHeight / 2 / zoomFactor ? false : true;
+                return this.x + this.size + 40 < viewCenterX - winWidth / 2 / zoomFactor || this.y + this.size + 40 < viewCenterY - winHeight / 2 / zoomFactor || this.x - this.size - 40 > viewCenterX + winWidth / 2 / zoomFactor || this.y - this.size - 40 > viewCenterY + winHeight / 2 / zoomFactor ? false : true;
             },
             draw: function() {
                 if (this.shouldRender()) {
