@@ -66,7 +66,7 @@ varArr.sort(function(v1, v2){
 });
 
 // Guess names (currently it's just a dictionary lookup)
-var varDict = fs.readFileSync(files[1], 'utf-8').split('\n');
+var varDict = fs.readFileSync(files[1], 'utf-8').trim().split('\n');
 
 varDict = varDict.map(function(line){
 	return line.split('#')[0].trim();
