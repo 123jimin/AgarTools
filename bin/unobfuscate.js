@@ -81,11 +81,11 @@ varArr.forEach(function(info, i){
 		info.def.mangled_name = varDict[i];
 });
 
+// Inject scripts
+
 // Beautify the AST
 console.log("Beautifying the AST...");
 agarAST.transform(new Beautifier);
-
-// Inject scripts
 
 // Results
 console.log("Generating the output...");
