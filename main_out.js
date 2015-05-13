@@ -62,7 +62,7 @@
         $("#overlays").show();
     }
     function unk_14() {
-        if (.5 > zoomFactor) unk_112 = null; else {
+        if (.5 > zoomFactor) quadTree = null; else {
             for (var minX = Number.POSITIVE_INFINITY, minY = Number.POSITIVE_INFINITY, maxX = Number.NEGATIVE_INFINITY, maxY = Number.NEGATIVE_INFINITY, unk_19 = 0, unk_20 = 0; unk_20 < unk_119.length; unk_20++) if (unk_119[unk_20].shouldRender()) {
                 unk_19 = Math.max(unk_119[unk_20].size, unk_19);
                 minX = Math.min(unk_119[unk_20].x, minX);
@@ -70,14 +70,14 @@
                 maxX = Math.max(unk_119[unk_20].x, maxX);
                 maxY = Math.max(unk_119[unk_20].y, maxY);
             }
-            unk_112 = QUAD.init({
+            quadTree = QUAD.init({
                 minX: minX - (unk_19 + 100),
                 minY: minY - (unk_19 + 100),
                 maxX: maxX + (unk_19 + 100),
                 maxY: maxY + (unk_19 + 100)
             });
             for (unk_20 = 0; unk_20 < unk_119.length; unk_20++) if (minX = unk_119[unk_20], 
-            minX.shouldRender()) for (minY = 0; minY < minX.points.length; ++minY) unk_112.insert(minX.points[minY]);
+            minX.shouldRender()) for (minY = 0; minY < minX.points.length; ++minY) quadTree.insert(minX.points[minY]);
         }
     }
     function unk_21() {
@@ -179,26 +179,26 @@
         console.log("socket close");
         setTimeout(beginConnectServer, 500);
     }
-    function wsOnMessage(unk_43) {
-        function unk_44() {
-            for (var unk_45 = ""; ;) {
-                var unk_46 = unk_48.getUint16(unk_47, true);
-                unk_47 += 2;
-                if (0 == unk_46) break;
-                unk_45 += String.fromCharCode(unk_46);
+    function wsOnMessage(msg) {
+        function readStr() {
+            for (var str = ""; ;) {
+                var len = view.getUint16(pos, true);
+                pos += 2;
+                if (0 == len) break;
+                str += String.fromCharCode(len);
             }
-            return unk_45;
+            return str;
         }
-        var unk_47 = 1, unk_48 = new DataView(unk_43.data);
-        switch (unk_48.getUint8(0)) {
+        var pos = 1, view = new DataView(msg.data);
+        switch (view.getUint8(0)) {
           case 16:
-            unk_51(unk_48);
+            unk_51(view);
             break;
 
           case 17:
-            unk_142 = unk_48.getFloat32(1, true);
-            unk_143 = unk_48.getFloat32(5, true);
-            unk_144 = unk_48.getFloat32(9, true);
+            newViewCenter_x = view.getFloat32(1, true);
+            newViewCenter_y = view.getFloat32(5, true);
+            newZoomFactor = view.getFloat32(9, true);
             break;
 
           case 20:
@@ -207,19 +207,19 @@
             break;
 
           case 32:
-            unk_116.push(unk_48.getUint32(1, true));
+            unk_116.push(view.getUint32(1, true));
             break;
 
           case 49:
             if (null != unk_146) break;
-            unk_43 = unk_48.getUint32(unk_47, true);
-            unk_47 += 4;
+            msg = view.getUint32(pos, true);
+            pos += 4;
             leaderboards = [];
-            for (var unk_49 = 0; unk_49 < unk_43; ++unk_49) {
-                var unk_50 = unk_48.getUint32(unk_47, true), unk_47 = unk_47 + 4;
+            for (var unk_49 = 0; unk_49 < msg; ++unk_49) {
+                var unk_50 = view.getUint32(pos, true), pos = pos + 4;
                 leaderboards.push({
                     id: unk_50,
-                    name: unk_44()
+                    name: readStr()
                 });
             }
             unk_90();
@@ -227,38 +227,38 @@
 
           case 50:
             unk_146 = [];
-            unk_43 = unk_48.getUint32(unk_47, true);
-            unk_47 += 4;
-            for (unk_49 = 0; unk_49 < unk_43; ++unk_49) {
-                unk_146.push(unk_48.getFloat32(unk_47, true));
-                unk_47 += 4;
+            msg = view.getUint32(pos, true);
+            pos += 4;
+            for (unk_49 = 0; unk_49 < msg; ++unk_49) {
+                unk_146.push(view.getFloat32(pos, true));
+                pos += 4;
             }
             unk_90();
             break;
 
           case 64:
             {
-                unk_129 = unk_48.getFloat64(1, true);
-                unk_130 = unk_48.getFloat64(9, true);
-                unk_131 = unk_48.getFloat64(17, true);
-                unk_132 = unk_48.getFloat64(25, true);
-                unk_142 = (unk_131 + unk_129) / 2;
-                unk_143 = (unk_132 + unk_130) / 2;
-                unk_144 = 1;
+                unk_129 = view.getFloat64(1, true);
+                unk_130 = view.getFloat64(9, true);
+                unk_131 = view.getFloat64(17, true);
+                unk_132 = view.getFloat64(25, true);
+                newViewCenter_x = (unk_131 + unk_129) / 2;
+                newViewCenter_y = (unk_132 + unk_130) / 2;
+                newZoomFactor = 1;
                 if (0 == myBlobs.length) {
-                    viewCenter_x = unk_142;
-                    viewCenter_y = unk_143;
-                    zoomFactor = unk_144;
+                    viewCenter_x = newViewCenter_x;
+                    viewCenter_y = newViewCenter_y;
+                    zoomFactor = newZoomFactor;
                 }
             }
         }
     }
-    function unk_51(unk_52) {
+    function unk_51(view) {
         unk_127 = +new Date();
-        var unk_53 = Math.random(), unk_54 = 1;
+        var updateCode = Math.random(), pos = 1;
         unk_138 = false;
-        for (var unk_55 = unk_52.getUint16(unk_54, true), unk_54 = unk_54 + 2, unk_56 = 0; unk_56 < unk_55; ++unk_56) {
-            var unk_57 = cellDict[unk_52.getUint32(unk_54, true)], unk_58 = cellDict[unk_52.getUint32(unk_54 + 4, true)], unk_54 = unk_54 + 8;
+        for (var unk_55 = view.getUint16(pos, true), pos = pos + 2, unk_56 = 0; unk_56 < unk_55; ++unk_56) {
+            var unk_57 = cellDict[view.getUint32(pos, true)], unk_58 = cellDict[view.getUint32(pos + 4, true)], pos = pos + 8;
             if (unk_57 && unk_58) {
                 unk_58.destroy();
                 unk_58.ox = unk_58.x;
@@ -271,18 +271,18 @@
             }
         }
         for (;;) {
-            unk_55 = unk_52.getUint32(unk_54, true);
-            unk_54 += 4;
+            unk_55 = view.getUint32(pos, true);
+            pos += 4;
             if (0 == unk_55) break;
-            for (var unk_56 = unk_52.getFloat32(unk_54, true), unk_54 = unk_54 + 4, unk_57 = unk_52.getFloat32(unk_54, true), unk_54 = unk_54 + 4, unk_58 = unk_52.getFloat32(unk_54, true), unk_54 = unk_54 + 4, unk_59 = unk_52.getUint8(unk_54++), unk_60 = unk_52.getUint8(unk_54++), unk_61 = unk_52.getUint8(unk_54++), unk_59 = (unk_59 << 16 | unk_60 << 8 | unk_61).toString(16); 6 > unk_59.length; ) unk_59 = "0" + unk_59;
+            for (var unk_56 = view.getFloat32(pos, true), pos = pos + 4, unk_57 = view.getFloat32(pos, true), pos = pos + 4, unk_58 = view.getFloat32(pos, true), pos = pos + 4, unk_59 = view.getUint8(pos++), unk_60 = view.getUint8(pos++), unk_61 = view.getUint8(pos++), unk_59 = (unk_59 << 16 | unk_60 << 8 | unk_61).toString(16); 6 > unk_59.length; ) unk_59 = "0" + unk_59;
             unk_59 = "#" + unk_59;
-            unk_61 = unk_52.getUint8(unk_54++);
+            unk_61 = view.getUint8(pos++);
             unk_60 = !!(unk_61 & 1);
-            if (unk_61 & 2) unk_54 += 4;
-            if (unk_61 & 4) unk_54 += 8;
-            if (unk_61 & 8) unk_54 += 16;
+            if (unk_61 & 2) pos += 4;
+            if (unk_61 & 4) pos += 8;
+            if (unk_61 & 8) pos += 16;
             for (unk_61 = ""; ;) {
-                var unk_62 = unk_52.getUint16(unk_54, true), unk_54 = unk_54 + 2;
+                var unk_62 = view.getUint16(pos, true), pos = pos + 2;
                 if (0 == unk_62) break;
                 unk_61 += String.fromCharCode(unk_62);
             }
@@ -302,7 +302,7 @@
             unk_62.nx = unk_56;
             unk_62.ny = unk_57;
             unk_62.nSize = unk_58;
-            unk_62.updateCode = unk_53;
+            unk_62.updateCode = updateCode;
             unk_62.updateTime = unk_127;
             if (-1 != unk_116.indexOf(unk_55) && -1 == myBlobs.indexOf(unk_62)) {
                 document.getElementById("overlays").style.display = "none";
@@ -313,16 +313,16 @@
                 }
             }
         }
-        unk_52.getUint16(unk_54, true);
-        unk_54 += 2;
-        unk_57 = unk_52.getUint32(unk_54, true);
-        unk_54 += 4;
+        view.getUint16(pos, true);
+        pos += 2;
+        unk_57 = view.getUint32(pos, true);
+        pos += 4;
         for (unk_56 = 0; unk_56 < unk_57; unk_56++) {
-            unk_55 = unk_52.getUint32(unk_54, true);
-            unk_54 += 4;
-            if (cellDict[unk_55]) cellDict[unk_55].updateCode = unk_53;
+            unk_55 = view.getUint32(pos, true);
+            pos += 4;
+            if (cellDict[unk_55]) cellDict[unk_55].updateCode = updateCode;
         }
-        for (unk_56 = 0; unk_56 < unk_119.length; unk_56++) if (unk_119[unk_56].updateCode != unk_53) unk_119[unk_56--].destroy();
+        for (unk_56 = 0; unk_56 < unk_119.length; unk_56++) if (unk_119[unk_56].updateCode != updateCode) unk_119[unk_56--].destroy();
         if (unk_138 && 0 == myBlobs.length) $("#overlays").fadeIn(3e3);
     }
     function wsSendCursor() {
@@ -385,15 +385,15 @@
                 unk_80 += myBlobs[unk_82].x / myBlobs.length;
                 unk_81 += myBlobs[unk_82].y / myBlobs.length;
             }
-            unk_142 = unk_80;
-            unk_143 = unk_81;
-            unk_144 = zoomFactor;
+            newViewCenter_x = unk_80;
+            newViewCenter_y = unk_81;
+            newZoomFactor = zoomFactor;
             viewCenter_x = (viewCenter_x + unk_80) / 2;
             viewCenter_y = (viewCenter_y + unk_81) / 2;
         } else {
-            viewCenter_x = (29 * viewCenter_x + unk_142) / 30;
-            viewCenter_y = (29 * viewCenter_y + unk_143) / 30;
-            zoomFactor = (9 * zoomFactor + unk_144) / 10;
+            viewCenter_x = (29 * viewCenter_x + newViewCenter_x) / 30;
+            viewCenter_y = (29 * viewCenter_y + newViewCenter_y) / 30;
+            zoomFactor = (9 * zoomFactor + newZoomFactor) / 10;
         }
         unk_14();
         unk_21();
@@ -516,7 +516,7 @@
         if (strokeColor) this._strokeColor = strokeColor;
     }
     if ("agar.io" != window.location.hostname && "localhost" != window.location.hostname && "10.10.2.13" != window.location.hostname) window.location = "http://agar.io/"; else if (window.top != window) window.top.location = "http://agar.io/"; else {
-        var mainCanvDup, mainCtx, mainCanv, winWidth, winHeight, unk_112 = null, ws = null, viewCenter_x = 0, viewCenter_y = 0, unk_116 = [], myBlobs = [], cellDict = {}, unk_119 = [], unk_120 = [], leaderboards = [], targetX = 0, targetY = 0, unk_124 = -1, unk_125 = -1, unk_126 = 0, unk_127 = 0, unk_128 = null, unk_129 = 0, unk_130 = 0, unk_131 = 1e4, unk_132 = 1e4, zoomFactor = 1, unk_134 = null, showSkins = true, showNames = true, noColor = false, unk_138 = false, unk_139 = 0, darkTheme = false, showMass = false, unk_142 = viewCenter_x = 0 | (unk_129 + unk_131) / 2, unk_143 = viewCenter_y = 0 | (unk_130 + unk_132) / 2, unk_144 = 1, unk_145 = "", unk_146 = null, unk_147 = [ "#333333", "#FF3333", "#33FF33", "#3333FF" ], isMobile = "ontouchstart" in window && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent), unk_149 = new Image();
+        var mainCanvDup, mainCtx, mainCanv, winWidth, winHeight, quadTree = null, ws = null, viewCenter_x = 0, viewCenter_y = 0, unk_116 = [], myBlobs = [], cellDict = {}, unk_119 = [], unk_120 = [], leaderboards = [], targetX = 0, targetY = 0, unk_124 = -1, unk_125 = -1, unk_126 = 0, unk_127 = 0, unk_128 = null, unk_129 = 0, unk_130 = 0, unk_131 = 1e4, unk_132 = 1e4, zoomFactor = 1, unk_134 = null, showSkins = true, showNames = true, noColor = false, unk_138 = false, unk_139 = 0, darkTheme = false, showMass = false, newViewCenter_x = viewCenter_x = 0 | (unk_129 + unk_131) / 2, newViewCenter_y = viewCenter_y = 0 | (unk_130 + unk_132) / 2, newZoomFactor = 1, unk_145 = "", unk_146 = null, unk_147 = [ "#333333", "#FF3333", "#33FF33", "#3333FF" ], isMobile = "ontouchstart" in window && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent), unk_149 = new Image();
         unk_149.src = "img/split.png";
         var unk_150 = null;
         window.setNick = function(_nick) {
@@ -646,9 +646,9 @@
                     pointsAcc = new_points[i].v;
                     unk_178 = new_points[(i - 1 + pointsLen) % pointsLen].v;
                     unk_179 = new_points[(i + 1) % pointsLen].v;
-                    if (15 < this.size && null != unk_112) {
+                    if (15 < this.size && null != quadTree) {
                         var unk_181 = false, unk_182 = points[i].x, unk_183 = points[i].y;
-                        unk_112.retrieve2(unk_182 - 5, unk_183 - 5, 10, 10, function(unk_184) {
+                        quadTree.retrieve2(unk_182 - 5, unk_183 - 5, 10, 10, function(unk_184) {
                             if (unk_184.c != unk_180 && 25 > (unk_182 - unk_184.x) * (unk_182 - unk_184.x) + (unk_183 - unk_184.y) * (unk_183 - unk_184.y)) unk_181 = true;
                         });
                         if (!unk_181 && (points[i].x < unk_129 || points[i].y < unk_130 || points[i].x > unk_131 || points[i].y > unk_132)) unk_181 = true;
