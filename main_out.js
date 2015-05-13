@@ -6,8 +6,8 @@
         mainCtx = mainCanv.getContext("2d");
         mainCanv.onmousedown = function(evt) {
             if (isMobile) {
-                var unk_5 = evt.clientX - (5 + winWidth / 5 / 2), unk_6 = evt.clientY - (5 + winWidth / 5 / 2);
-                if (Math.sqrt(unk_5 * unk_5 + unk_6 * unk_6) <= winWidth / 5 / 2) {
+                var dx = evt.clientX - (5 + winWidth / 5 / 2), dy = evt.clientY - (5 + winWidth / 5 / 2);
+                if (Math.sqrt(dx * dx + dy * dy) <= winWidth / 5 / 2) {
                     wsSendCursor();
                     wsSendData(17);
                     return;
@@ -61,23 +61,22 @@
         joinRegion($("#region").val());
         $("#overlays").show();
     }
-    function unk_14() {
+    function initQuadTree() {
         if (.5 > zoomFactor) quadTree = null; else {
-            for (var minX = Number.POSITIVE_INFINITY, minY = Number.POSITIVE_INFINITY, maxX = Number.NEGATIVE_INFINITY, maxY = Number.NEGATIVE_INFINITY, unk_19 = 0, unk_20 = 0; unk_20 < cellList.length; unk_20++) if (cellList[unk_20].shouldRender()) {
-                unk_19 = Math.max(cellList[unk_20].size, unk_19);
-                minX = Math.min(cellList[unk_20].x, minX);
-                minY = Math.min(cellList[unk_20].y, minY);
-                maxX = Math.max(cellList[unk_20].x, maxX);
-                maxY = Math.max(cellList[unk_20].y, maxY);
+            for (var minX = Number.POSITIVE_INFINITY, minY = Number.POSITIVE_INFINITY, maxX = Number.NEGATIVE_INFINITY, maxY = Number.NEGATIVE_INFINITY, maxSize = 0, i = 0; i < cellList.length; i++) if (cellList[i].shouldRender()) {
+                maxSize = Math.max(cellList[i].size, maxSize);
+                minX = Math.min(cellList[i].x, minX);
+                minY = Math.min(cellList[i].y, minY);
+                maxX = Math.max(cellList[i].x, maxX);
+                maxY = Math.max(cellList[i].y, maxY);
             }
             quadTree = QUAD.init({
-                minX: minX - (unk_19 + 100),
-                minY: minY - (unk_19 + 100),
-                maxX: maxX + (unk_19 + 100),
-                maxY: maxY + (unk_19 + 100)
+                minX: minX - (maxSize + 100),
+                minY: minY - (maxSize + 100),
+                maxX: maxX + (maxSize + 100),
+                maxY: maxY + (maxSize + 100)
             });
-            for (unk_20 = 0; unk_20 < cellList.length; unk_20++) if (minX = cellList[unk_20], 
-            minX.shouldRender()) for (minY = 0; minY < minX.points.length; ++minY) quadTree.insert(minX.points[minY]);
+            for (i = 0; i < cellList.length; i++) if (minX = cellList[i], minX.shouldRender()) for (minY = 0; minY < minX.points.length; ++minY) quadTree.insert(minX.points[minY]);
         }
     }
     function updateCursorCoord() {
@@ -85,21 +84,21 @@
         cursorY = (cursorPY - winHeight / 2) / zoomFactor + viewCenterY;
     }
     function getServerInfo() {
-        if (null == unk_150) {
-            unk_150 = {};
+        if (null == regionName) {
+            regionName = {};
             $("#region").children().each(function() {
-                var unk_23 = $(this), unk_24 = unk_23.val();
-                if (unk_24) unk_150[unk_24] = unk_23.text();
+                var $this = $(this), val = $this.val();
+                if (val) regionName[val] = $this.text();
             });
         }
         $.get("http://m.agar.io/info", function(regionData) {
-            var unk_26 = {}, unk_27;
-            for (unk_27 in regionData.regions) {
-                var unk_28 = unk_27.split(":")[0];
-                unk_26[unk_28] = unk_26[unk_28] || 0;
-                unk_26[unk_28] += regionData.regions[unk_27].numPlayers;
+            var regionNumPlayers = {}, region;
+            for (region in regionData.regions) {
+                var regionSplit = region.split(":")[0];
+                regionNumPlayers[regionSplit] = regionNumPlayers[regionSplit] || 0;
+                regionNumPlayers[regionSplit] += regionData.regions[region].numPlayers;
             }
-            for (unk_27 in unk_26) $('#region option[value="' + unk_27 + '"]').text(unk_150[unk_27] + " (" + unk_26[unk_27] + " players)");
+            for (region in regionNumPlayers) $('#region option[value="' + region + '"]').text(regionName[region] + " (" + regionNumPlayers[region] + " players)");
         }, "json");
     }
     function hideOverlay() {
@@ -215,10 +214,10 @@
             msg = view.getUint32(pos, true);
             pos += 4;
             leaderboards = [];
-            for (var unk_49 = 0; unk_49 < msg; ++unk_49) {
-                var unk_50 = view.getUint32(pos, true), pos = pos + 4;
+            for (var i = 0; i < msg; ++i) {
+                var id = view.getUint32(pos, true), pos = pos + 4;
                 leaderboards.push({
-                    id: unk_50,
+                    id: id,
                     name: readStr()
                 });
             }
@@ -229,7 +228,7 @@
             unk_146 = [];
             msg = view.getUint32(pos, true);
             pos += 4;
-            for (unk_49 = 0; unk_49 < msg; ++unk_49) {
+            for (i = 0; i < msg; ++i) {
                 unk_146.push(view.getFloat32(pos, true));
                 pos += 4;
             }
@@ -395,7 +394,7 @@
             viewCenterY = (29 * viewCenterY + newViewCenter_y) / 30;
             zoomFactor = (9 * zoomFactor + newZoomFactor) / 10;
         }
-        unk_14();
+        initQuadTree();
         updateCursorCoord();
         mainCtx.clearRect(0, 0, winWidth, winHeight);
         mainCtx.fillStyle = darkTheme ? "#111111" : "#F2FBFF";
@@ -518,7 +517,7 @@
     if ("agar.io" != window.location.hostname && "localhost" != window.location.hostname && "10.10.2.13" != window.location.hostname) window.location = "http://agar.io/"; else if (window.top != window) window.top.location = "http://agar.io/"; else {
         var mainCanvDup, mainCtx, mainCanv, winWidth, winHeight, quadTree = null, ws = null, viewCenterX = 0, viewCenterY = 0, unk_116 = [], myBlobs = [], cellDict = {}, cellList = [], unk_120 = [], leaderboards = [], cursorPX = 0, cursorPY = 0, cursorX = -1, cursorY = -1, unk_126 = 0, lastRedrawTime = 0, unk_128 = null, unk_129 = 0, unk_130 = 0, unk_131 = 1e4, unk_132 = 1e4, zoomFactor = 1, currentRegion = null, showSkins = true, showNames = true, noColor = false, unk_138 = false, maxScore = 0, darkTheme = false, showMass = false, newViewCenter_x = viewCenterX = 0 | (unk_129 + unk_131) / 2, newViewCenter_y = viewCenterY = 0 | (unk_130 + unk_132) / 2, newZoomFactor = 1, gameMode = "", unk_146 = null, unk_147 = [ "#333333", "#FF3333", "#33FF33", "#3333FF" ], isMobile = "ontouchstart" in window && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent), unk_149 = new Image();
         unk_149.src = "img/split.png";
-        var unk_150 = null;
+        var regionName = null;
         window.setNick = function(_nick) {
             hideOverlay();
             unk_128 = _nick;
