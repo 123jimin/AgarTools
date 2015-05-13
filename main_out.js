@@ -192,7 +192,7 @@
         var pos = 1, view = new DataView(msg.data);
         switch (view.getUint8(0)) {
           case 16:
-            unk_51(view);
+            readSocketData(view);
             break;
 
           case 17:
@@ -253,8 +253,8 @@
             }
         }
     }
-    function unk_51(view) {
-        unk_127 = +new Date();
+    function readSocketData(view) {
+        lastRedrawTime = +new Date();
         var updateCode = Math.random(), pos = 1;
         unk_138 = false;
         for (var unk_55 = view.getUint16(pos, true), pos = pos + 2, unk_56 = 0; unk_56 < unk_55; ++unk_56) {
@@ -267,7 +267,7 @@
                 unk_58.nx = unk_57.x;
                 unk_58.ny = unk_57.y;
                 unk_58.nSize = unk_58.size;
-                unk_58.updateTime = unk_127;
+                unk_58.updateTime = lastRedrawTime;
             }
         }
         for (;;) {
@@ -303,7 +303,7 @@
             unk_62.ny = unk_57;
             unk_62.nSize = unk_58;
             unk_62.updateCode = updateCode;
-            unk_62.updateTime = unk_127;
+            unk_62.updateTime = lastRedrawTime;
             if (-1 != unk_116.indexOf(unk_55) && -1 == myBlobs.indexOf(unk_62)) {
                 document.getElementById("overlays").style.display = "none";
                 myBlobs.push(unk_62);
@@ -328,9 +328,9 @@
     function wsSendCursor() {
         if (null != ws && ws.readyState == ws.OPEN) {
             var dx = cursorPX - winWidth / 2, dy = cursorPY - winHeight / 2;
-            if (!(64 > dx * dx + dy * dy || unk_158 == cursorX && unk_159 == cursorY)) {
-                unk_158 = cursorX;
-                unk_159 = cursorY;
+            if (!(64 > dx * dx + dy * dy || prvCursorX == cursorX && prvCursorY == cursorY)) {
+                prvCursorX = cursorX;
+                prvCursorY = cursorY;
                 dx = new ArrayBuffer(21);
                 dy = new DataView(dx);
                 dy.setUint8(0, 16);
@@ -367,19 +367,19 @@
         mainCanvDup.height = mainCanv.height = winHeight;
         redraw();
     }
-    function unk_75() {
+    function computeZoomFactor() {
         if (0 != myBlobs.length) {
-            for (var unk_76 = 0, unk_77 = 0; unk_77 < myBlobs.length; unk_77++) unk_76 += myBlobs[unk_77].size;
-            unk_76 = Math.pow(Math.min(64 / unk_76, 1), .4) * Math.max(winHeight / 1080, winWidth / 1920);
-            zoomFactor = (9 * zoomFactor + unk_76) / 10;
+            for (var newZoom = 0, i = 0; i < myBlobs.length; i++) newZoom += myBlobs[i].size;
+            newZoom = Math.pow(Math.min(64 / newZoom, 1), .4) * Math.max(winHeight / 1080, winWidth / 1920);
+            zoomFactor = (9 * zoomFactor + newZoom) / 10;
         }
     }
     function redraw() {
-        var unk_79 = +new Date();
+        var drawTime = +new Date();
         ++unk_126;
-        unk_127 = +new Date();
+        lastRedrawTime = +new Date();
         if (0 < myBlobs.length) {
-            unk_75();
+            computeZoomFactor();
             for (var unk_80 = 0, unk_81 = 0, unk_82 = 0; unk_82 < myBlobs.length; unk_82++) {
                 myBlobs[unk_82].updatePos();
                 unk_80 += myBlobs[unk_82].x / myBlobs.length;
@@ -430,11 +430,11 @@
         for (unk_82 = 0; unk_82 < cellList.length; unk_82++) cellList[unk_82].draw();
         mainCtx.restore();
         if (lBoardCanv) mainCtx.drawImage(lBoardCanv, winWidth - lBoardCanv.width - 10, 10);
-        unk_139 = Math.max(unk_139, unk_87());
-        if (0 != unk_139) {
-            if (null == unk_162) unk_162 = new TextDisplayer(24, "#FFFFFF");
-            unk_162.setValue("Score: " + (0 | unk_139 / 100));
-            unk_81 = unk_162.render();
+        maxScore = Math.max(maxScore, computeScore());
+        if (0 != maxScore) {
+            if (null == scoreTextDisplayer) scoreTextDisplayer = new TextDisplayer(24, "#FFFFFF");
+            scoreTextDisplayer.setValue("Score: " + (0 | maxScore / 100));
+            unk_81 = scoreTextDisplayer.render();
             unk_80 = unk_81.width;
             mainCtx.globalAlpha = .2;
             mainCtx.fillStyle = "#000000";
@@ -443,10 +443,10 @@
             mainCtx.drawImage(unk_81, 15, winHeight - 10 - 24 - 5);
         }
         unk_85();
-        unk_79 = +new Date() - unk_79;
-        if (unk_79 > 1e3 / 60) unk_161 -= .01; else if (unk_79 < 1e3 / 65) unk_161 += .01;
-        if (.4 > unk_161) unk_161 = .4;
-        if (1 < unk_161) unk_161 = 1;
+        drawTime = +new Date() - drawTime;
+        if (drawTime > 1e3 / 60) numPointFactor -= .01; else if (drawTime < 1e3 / 65) numPointFactor += .01;
+        if (.4 > numPointFactor) numPointFactor = .4;
+        if (1 < numPointFactor) numPointFactor = 1;
     }
     function unk_85() {
         if (isMobile && unk_149.width) {
@@ -454,9 +454,9 @@
             mainCtx.drawImage(unk_149, 5, 5, unk_86, unk_86);
         }
     }
-    function unk_87() {
-        for (var unk_88 = 0, unk_89 = 0; unk_89 < myBlobs.length; unk_89++) unk_88 += myBlobs[unk_89].nSize * myBlobs[unk_89].nSize;
-        return unk_88;
+    function computeScore() {
+        for (var score = 0, i = 0; i < myBlobs.length; i++) score += myBlobs[i].nSize * myBlobs[i].nSize;
+        return score;
     }
     function redrawLeaderboard() {
         lBoardCanv = null;
@@ -516,14 +516,14 @@
         if (strokeColor) this._strokeColor = strokeColor;
     }
     if ("agar.io" != window.location.hostname && "localhost" != window.location.hostname && "10.10.2.13" != window.location.hostname) window.location = "http://agar.io/"; else if (window.top != window) window.top.location = "http://agar.io/"; else {
-        var mainCanvDup, mainCtx, mainCanv, winWidth, winHeight, quadTree = null, ws = null, viewCenterX = 0, viewCenterY = 0, unk_116 = [], myBlobs = [], cellDict = {}, cellList = [], unk_120 = [], leaderboards = [], cursorPX = 0, cursorPY = 0, cursorX = -1, cursorY = -1, unk_126 = 0, unk_127 = 0, unk_128 = null, unk_129 = 0, unk_130 = 0, unk_131 = 1e4, unk_132 = 1e4, zoomFactor = 1, currentRegion = null, showSkins = true, showNames = true, noColor = false, unk_138 = false, unk_139 = 0, darkTheme = false, showMass = false, newViewCenter_x = viewCenterX = 0 | (unk_129 + unk_131) / 2, newViewCenter_y = viewCenterY = 0 | (unk_130 + unk_132) / 2, newZoomFactor = 1, gameMode = "", unk_146 = null, unk_147 = [ "#333333", "#FF3333", "#33FF33", "#3333FF" ], isMobile = "ontouchstart" in window && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent), unk_149 = new Image();
+        var mainCanvDup, mainCtx, mainCanv, winWidth, winHeight, quadTree = null, ws = null, viewCenterX = 0, viewCenterY = 0, unk_116 = [], myBlobs = [], cellDict = {}, cellList = [], unk_120 = [], leaderboards = [], cursorPX = 0, cursorPY = 0, cursorX = -1, cursorY = -1, unk_126 = 0, lastRedrawTime = 0, unk_128 = null, unk_129 = 0, unk_130 = 0, unk_131 = 1e4, unk_132 = 1e4, zoomFactor = 1, currentRegion = null, showSkins = true, showNames = true, noColor = false, unk_138 = false, maxScore = 0, darkTheme = false, showMass = false, newViewCenter_x = viewCenterX = 0 | (unk_129 + unk_131) / 2, newViewCenter_y = viewCenterY = 0 | (unk_130 + unk_132) / 2, newZoomFactor = 1, gameMode = "", unk_146 = null, unk_147 = [ "#333333", "#FF3333", "#33FF33", "#3333FF" ], isMobile = "ontouchstart" in window && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent), unk_149 = new Image();
         unk_149.src = "img/split.png";
         var unk_150 = null;
         window.setNick = function(_nick) {
             hideOverlay();
             unk_128 = _nick;
             wsSendNick();
-            unk_139 = 0;
+            maxScore = 0;
         };
         window.setRegion = joinRegion;
         window.setSkins = function(_skin) {
@@ -552,7 +552,7 @@
             }
         };
         window.connect = openSocket;
-        var unk_158 = -1, unk_159 = -1, lBoardCanv = null, unk_161 = 1, unk_162 = null, skinImages = {}, skinList = "poland;usa;china;russia;canada;australia;spain;brazil;germany;ukraine;france;sweden;hitler;north korea;south korea;japan;united kingdom;earth;greece;latvia;lithuania;estonia;finland;norway;cia;maldivas;austria;nigeria;reddit;yaranaika;confederate;9gag;indiana;4chan;italy;ussr;bulgaria;tumblr;2ch.hk;hong kong;portugal;jamaica;german empire;mexico;sanik;switzerland;croatia;chile;indonesia;bangladesh;thailand;iran;iraq;peru;moon;botswana;bosnia;netherlands;european union;taiwan;pakistan;hungary;satanist;qing dynasty;nazi;matriarchy;patriarchy;feminism;ireland;texas;facepunch;prodota;cambodia;steam;piccolo;ea;india;kc;denmark;quebec;ayy lmao;sealand;bait;tsarist russia;origin;vinesauce;stalin;belgium;luxembourg;stussy;prussia;8ch;argentina;scotland;sir;romania;belarus;wojak;isis;doge;nasa;byzantium;imperial japan;french kingdom;somalia;turkey;mars;pokerface".split(";"), unk_165 = [ "m'blob" ];
+        var prvCursorX = -1, prvCursorY = -1, lBoardCanv = null, numPointFactor = 1, scoreTextDisplayer = null, skinImages = {}, skinList = "poland;usa;china;russia;canada;australia;spain;brazil;germany;ukraine;france;sweden;hitler;north korea;south korea;japan;united kingdom;earth;greece;latvia;lithuania;estonia;finland;norway;cia;maldivas;austria;nigeria;reddit;yaranaika;confederate;9gag;indiana;4chan;italy;ussr;bulgaria;tumblr;2ch.hk;hong kong;portugal;jamaica;german empire;mexico;sanik;switzerland;croatia;chile;indonesia;bangladesh;thailand;iran;iraq;peru;moon;botswana;bosnia;netherlands;european union;taiwan;pakistan;hungary;satanist;qing dynasty;nazi;matriarchy;patriarchy;feminism;ireland;texas;facepunch;prodota;cambodia;steam;piccolo;ea;india;kc;denmark;quebec;ayy lmao;sealand;bait;tsarist russia;origin;vinesauce;stalin;belgium;luxembourg;stussy;prussia;8ch;argentina;scotland;sir;romania;belarus;wojak;isis;doge;nasa;byzantium;imperial japan;french kingdom;somalia;turkey;mars;pokerface".split(";"), unk_165 = [ "m'blob" ];
         Cell.prototype = {
             id: 0,
             points: null,
@@ -630,7 +630,7 @@
                 var minPoints = 10;
                 if (20 > this.size) minPoints = 5;
                 if (this.isVirus) minPoints = 30;
-                return 0 | Math.max(this.size * zoomFactor * (this.isVirus ? Math.min(2 * unk_161, 1) : unk_161), minPoints);
+                return 0 | Math.max(this.size * zoomFactor * (this.isVirus ? Math.min(2 * numPointFactor, 1) : numPointFactor), minPoints);
             },
             movePoints: function() {
                 this.createPoints();
@@ -670,7 +670,7 @@
             },
             updatePos: function() {
                 var updateRate;
-                updateRate = (unk_127 - this.updateTime) / 120;
+                updateRate = (lastRedrawTime - this.updateTime) / 120;
                 updateRate = 0 > updateRate ? 0 : 1 < updateRate ? 1 : updateRate;
                 updateRate = updateRate * updateRate * (3 - 2 * updateRate);
                 this.getNameSize();
@@ -690,7 +690,7 @@
                 if (this.shouldRender()) {
                     var misc1 = !this.isVirus && .5 > zoomFactor;
                     mainCtx.save();
-                    this.drawTime = unk_127;
+                    this.drawTime = lastRedrawTime;
                     var misc2 = this.updatePos();
                     if (this.destroyed) mainCtx.globalAlpha *= 1 - misc2;
                     mainCtx.lineWidth = 10;
