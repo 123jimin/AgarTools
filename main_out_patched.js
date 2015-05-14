@@ -459,6 +459,7 @@
     }
     function computeScore() {
 		// Patch: compute myMinScore
+		myMinScore = 1e8;
         for (var score = 0, i = 0; i < myBlobs.length; i++){
 			var blobScore = myBlobs[i].nSize;
 			blobScore *= blobScore;
@@ -705,8 +706,8 @@
                     mainCtx.lineWidth = 10;
                     mainCtx.lineCap = "round";
                     mainCtx.lineJoin = this.isVirus ? "mitter" : "round";
-                    if (noColor) {
-						// Patch: display colors based on sizes
+					// Patch: display colors based on sizes
+					if (noColor && !this.isVirus) {
 						var dispColor = null;
 						var blobScore = this.size * this.size,
 							ratio = blobScore / myMinScore;
